@@ -1,0 +1,19 @@
+# Files
+*.pyc
+*.cpython-310.pyc
+*screenlog.0
+*.egg-info
+*.zip
+*.pkl
+*.0
+
+# Folders
+fragment_gym/networks/rl/tensorboard_logs
+fragment_gym/networks/rl/saved_models
+fragment_gym/wandb
+fragment_gym/meshes/fragments
+fragment_gym/fragment_evaluation
+
+# VSCode
+.vscode
+*.code-workspace

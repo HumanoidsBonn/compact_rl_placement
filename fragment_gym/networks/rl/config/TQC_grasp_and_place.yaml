@@ -1,0 +1,186 @@
+######################################################################
+# Train
+######################################################################
+task_name: "GraspeAndPlaceEnv" # [str]
+seed: 7 # [int] comment for random seed
+max_iterations: &max_iterations 150000 # [iterations]
+
+# Replay buffer
+buffer_size: 100000 #*max_iterations # [iterations]
+fill_buffer_at_start: 2000 # [iterations]
+
+######################################################################
+# Callbacks
+######################################################################
+# Tensorboard callback
+tensorboard_cb_amount_of_episodes_for_mean: 100 # [episodes]
+
+# Saving callback
+saving_cb_frequency: 2500 # [iterations]
+number_of_inter_models_to_keep: -1 # -1=keep_all [iterations]
+save_inter_replay_buffer: False # [bool]
+
+# Eval callback
+eval_cb_frequency: &eval_cb_frequency 2500 # [iterations]
+eval_episodes: 25 # [episodes]
+eval_best_model_success_threshold: 1.0 # [float] best model is only stored if success_rate >= threshold
+
+# Best fresco model callback
+eval_best_fresco_model_cb_frequency: *eval_cb_frequency # [iterations]
+eval_best_fresco_model_success_threshold: 0.0 # [float] best model is only stored if success_rate >= threshold
+
+# Learning rate
+learning_rate: 1e-3 # 1e-3 [float]
+wait_for_last_curriculum_step_to_adapt_learning_rate: False
+
+# Logging
+# Creates a new logging folder "*_no"
+# and starts plotting the new training with iteration 0
+reset_tensorboard_iterations: False # False [bool]
+
+######################################################################
+# Task
+######################################################################
+# Reward
+reward_keys: 
+  - "plane_contact"
+  - "fragment_contact"
+  - "corner_closeness"
+  - "ruler_closeness"
+  - "fragment_angle_closeness"
+  - "drop_height"
+  - "corner_distance"
+  - "ruler_distance"
+  - "fragment_angle_difference"
+
+# Sparse rewards and penalties (y value -> reachable max)
+reward_corner_closeness: 2.0
+reward_ruler_closeness: 4.0
+reward_fragment_angle_closeness: 2.0
+penalty_plane_contact: -1.0 # [float]
+penalty_fragment_contact: &penalty_fragment_contact -5.0 # [float]
+penalty_drop_factor: -0.5 # [float] current_fragment_to_table_height*penalty_drop_factor
+
+# Continous rewards and penalties
+corner_distance_power: 1 # [int]
+corner_distance_root: False # [bool]
+ruler_distance_power: 1 # [int]
+ruler_distance_root: False # [bool]
+
+# Scale factors (x value -> slope)
+penalty_corner_distance_scale_factor: -0.1
+penalty_ruler_distance_scale_factor: -0.1
+penalty_placing_fragment_angle_difference_scale_factor: -0.1
+reward_corner_closeness_scale_factor: 3.0
+reward_ruler_closeness_scale_factor: 3.0
+reward_fragment_angle_closeness_scale_factor: 3.0
+
+# Reward functions
+reward_corner_closeness_function: "tanh" # ["quotient_x", "tanh", "linear"]
+reward_ruler_closeness_function: "tanh" # ["quotient_x", "tanh", "linear"]
+
+# Terminataion criteria (episode)
+timeout_iterations: 10 # [iterations]
+terminate_on_plane_contact: True
+terminate_on_fragment_contact: True
+
+# Multi task
+drop_height_threshold: -1.0 # [float] height from table to object bottom, -1.0 for no threshold
+
+# Curriculum learning
+use_curriculum_learning: False
+curriculum_start_type: "fragment_center" # ["fragment_center", "fresco_center"]
+initial_curriculum_height: 0.03 # [float]
+curriculum_end_type: "fragment_center" # ["fragment_center", "fresco_center"] used if use_curriculum_learning: False
+final_curriculum_height: 0.04 # [float]
+curriculum_steps: 10 # [int] interpolation steps for curriculum learning
+curriculum_transition_trigger: "eval_success" # ["episodes", "eval_success", "rollout_success"]
+curriculum_transition_episodes: 5000 # [int] # only for curriculum_transition_trigger=="episodes"
+curriculum_transition_success_rate: 0.8 # [float] only for curriculum_transition_trigger=="rollout_success" or "eval_success"
+
+######################################################################
+# Fragments
+######################################################################
+fragment_format: "stl" # [urdf, stl, vhacd]
+fresco_scale_factor: 0.5 # [float]
+fresco_assembly_center_location: [0.45,0.0] # [float]
+object_parking_position_start: [-2.0,0.0,0.0] # [float]
+object_parking_distance: 0.4 # [float]
+train_frescoes: [0,0]
+test_frescoes: [1,1]
+eval_frescoes: [1,1]
+
+# Fragment spawn and grasp settings -> overides evaluation -> remove for evaluation
+grasp_yaw: -1.0 # [float] gripper grasp angle in degree [0,360], -1.0=random
+fragment_spawn_yaw: -1.0 # [float] fragment spawn angle in degree [0,360], -1.0=random
+
+######################################################################
+# Controller
+######################################################################
+position_gain: 0.2 # [float]
+interpolation_increments: 0.01 # [m]
+# Control frequency
+# per_step_iterations = 240/control_frequency
+# control_frequency = 240 -> simulation step = control step  
+control_frequency: 240 # [int] [1,240] -> be careful, best do not change
+
+######################################################################
+# Action Space
+###########################################################0##########
+arm_action_position_increment_value: 0.01 # [m]
+arm_action_yaw_angle_increment_value: 10.0 # [degree]
+action_noise: 0.1 # sigma [%] default: 0.1
+
+######################################################################
+# Observation Space
+###########################################################0##########
+normalize_obs: True # [bool]
+
+# Reach: UR5 + gripper length = 0.850 m + 0.162.8 m = 1.0128 m 
+arm_joint_limits: [-180.0,180.0] # [degree]
+gripper_position_limits: [-1.0128,1.0128] # [m] min=max=reach
+gripper_yaw_angle_limits: [-180.0,180.0] # [degree]
+fragment_to_target_distance_limits: [0.0,0.1266] # [m] # 0.1266 = robot_reach/8
+fragment_to_target_3d_distance_limits: [-0.1266,0.1266] # [m] # 0.1266 = robot_reach/8
+fragment_to_target_yaw_angle_limits: [-90.0,90.0] # [degree] # min=max=dependend on dataset
+ruler_fragment_bool_limits: [0,1] # [int]
+placing_object_overlap_limits: [0,1] # [int]
+
+use_3d_normalization: False
+use_min_3d_observations: True
+
+# Corresponding corners
+# Defines max size of corresponding corners
+# Max number of neighbours (5+2 for safety =7)
+# each with 2 corresponding corners and 3 dimensioons (x,y,z)
+# -> e.g. 6x2x3=36
+max_expected_placement_neighbours: 6 # [int]
+use_min_placing_object_dist_in_obs: True # [bool]
+use_min_robot_to_table_objects_dist_in_obs: True # [bool]
+use_placing_object_overlap_in_obs: True # [bool]
+
+######################################################################
+# Robot
+######################################################################
+# Robot
+robot_reach: 1.0128 # [float] reach = arm + gripper
+
+# Gripper
+gripper_open: 0.085 # [float]
+gripper_closed: -0.005 # [float]
+gripper_position_delta_high_precision: 0.001 # [float]
+gripper_position_delta_low_precision: 0.01 # [float]
+gripper_queue_size_low_precision: 50 # [int]
+gripper_queue_size_high_precision: 300 # [int]
+gripper_release_distance: 0.01 # [float] 5mm per side
+gripper_target_threshold: 0.001 # [float]
+
+######################################################################
+# File handling
+######################################################################
+# # Settings used for file handling and logging (save/load destination etc)
+file_handling:
+  huggingface:
+    huggingface_project_name: "rl-fragment-placing"
+  wandb:
+    wandb_project_name: "rl_fragment_placing"
