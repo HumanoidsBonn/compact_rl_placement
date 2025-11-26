@@ -116,7 +116,7 @@ Please cite our research as:
 ```
 @inproceedings{kreis24humanoids,
   title={Compact Multi-Object Placement Using Adjacency-Aware Reinforcement Learning}, 
-  author={Benedikt Kreis and Nils Dengler and Jorge de Heuvel and Rohit Menon and Hamsa Perur and Maren Bennewitz},
+  author={B. Kreis and N. Dengler and J. de Heuvel and R. Menon and H. Perur and M. Bennewitz},
   booktitle={Proc. of the IEEE-RAS Int. Conf. on Humanoid Robots (Humanoids)},
   doi={10.1109/Humanoids58906.2024.10769899},
   year={2024}
